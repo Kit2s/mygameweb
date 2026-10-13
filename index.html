@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🧙 Potion Master — ศึกเรียงยาเวทมนตร์</title>
+
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+  
+    body {
+      font-family: 'Segoe UI', 'Sarabun', sans-serif;
+      background: linear-gradient(160deg, #1a0b2e 0%, #2d1b4e 50%, #1a0b2e 100%);
+      color: #f0e6ff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+  
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+  
+    h1 {
+      font-size: 2.2rem;
+      text-shadow: 0 0 20px #a855f7;
+    }
+  
+    .subtitle {
+      color: #c4b5fd;
+      margin-top: 6px;
+    }
+  
+    .screen {
+      width: 100%;
+      max-width: 860px;
+    }
+  
+    .hidden {
+      display: none !important;
+    }
+  
+    /* ============ เมนู ============ */
+    #menu h2 {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+  
+    .mode-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+  
+    .mode-card {
+      background: rgba(168, 85, 247, 0.12);
+      border: 2px solid #7c3aed;
+      border-radius: 16px;
+      padding: 22px 14px;
+      color: #f0e6ff;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+  
+    .mode-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(168, 85, 247, 0.45);
+    }
+  
+    .mode-icon {
+      font-size: 2.4rem;
+    }
+  
+    .mode-name {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+  
+    .mode-desc {
+      font-size: 0.85rem;
+      color: #c4b5fd;
+      line-height: 1.4;
+    }
+  
+    .difficulty-row {
+      text-align: center;
+      margin-top: 20px;
+    }
+  
+    select {
+      background: #2d1b4e;
+      color: #fff;
+      border: 1px solid #7c3aed;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 1rem;
+    }
+  
+    /* ============ HUD ============ */
+    .hud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+  
+    .hud-item {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+  
+    #btn-quit,
+    #btn-again {
+      background: #7c3aed;
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+  
+    #btn-quit:hover,
+    #btn-again:hover {
+      background: #9333ea;
+    }
+  
+    .instruction {
+      text-align: center;
+      color: #fbbf24;
+      margin-bottom: 14px;
+      min-height: 1.4em;
+    }
+  
+    /* ============ ชั้นวางและขวดยา ============ */
+    .shelf-label {
+      font-weight: bold;
+      margin: 10px 0 6px;
+    }
+  
+    .shelf {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      align-items: flex-end;
+      background: linear-gradient(#3b2a5c, #2a1d42);
+      border: 2px solid #7c3aed;
+      border-radius: 14px;
+      padding: 18px 12px;
+      min-height: 150px;
+    }
+  
+    .potion {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      cursor: pointer;
+      border-radius: 10px 10px 6px 6px;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      font-weight: bold;
+      width: 54px;
+      padding-bottom: 6px;
+      transition: transform 0.25s, box-shadow 0.2s, border-color 0.2s;
+      position: relative;
+      user-select: none;
+    }
+  
+    .potion::before {
+      /* จุกขวด */
+      content: "";
+      width: 14px;
+      height: 10px;
+      background: #8b5a2b;
+      border-radius: 3px 3px 0 0;
+      position: absolute;
+      top: -10px;
+    }
+  
+    .potion:hover {
+      transform: translateY(-6px);
+    }
+  
+    .potion.selected {
+      border-color: #fbbf24;
+      box-shadow: 0 0 16px #fbbf24;
+      transform: translateY(-10px);
+    }
+  
+    .potion.locked {
+      border-color: #22c55e;
+      box-shadow: 0 0 10px #22c55e;
+      cursor: default;
+      opacity: 0.85;
+    }
+  
+    .potion.comparing {
+      border-color: #38bdf8;
+      box-shadow: 0 0 14px #38bdf8;
+    }
+  
+    .potion.wrong {
+      animation: shake 0.4s;
+      border-color: #ef4444;
+    }
+  
+    @keyframes shake {
+  
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+  
+      25% {
+        transform: translateX(-6px);
+      }
+  
+      75% {
+        transform: translateX(6px);
+      }
+    }
+  
+    /* AI shelf ขวดเล็กกว่าและคลิกไม่ได้ */
+    #ai-shelf .potion {
+      cursor: default;
+      width: 44px;
+    }
+  
+    #ai-shelf .potion:hover {
+      transform: none;
+    }
+  
+    .ai-status {
+      text-align: center;
+      color: #93c5fd;
+      margin-top: 6px;
+      min-height: 1.3em;
+    }
+  
+    .message {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 1.1rem;
+      min-height: 1.5em;
+      color: #fbbf24;
+    }
+  
+    /* ============ หน้าจอผลลัพธ์ ============ */
+    #result {
+      text-align: center;
+    }
+  
+    #result h2 {
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+  
+    #result-detail {
+      font-size: 1.15rem;
+      margin-bottom: 10px;
+    }
+  
+    .lesson {
+      background: rgba(168, 85, 247, 0.15);
+      border-left: 4px solid #a855f7;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin: 16px auto;
+      max-width: 560px;
+      text-align: left;
+      line-height: 1.6;
+    }
+  
+    footer {
+      margin-top: auto;
+      padding-top: 24px;
+      color: #8b7bb0;
+      font-size: 0.85rem;
+    }
+  
+    .mode-card.active {
+      border-color: #fbbf24;
+      background: rgba(251, 191, 36, 0.15);
+      box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+      transform: translateY(-4px);
+    }
+  
+    .start-row {
+      text-align: center;
+      margin-top: 24px;
+    }
+  
+    .selected-mode-text {
+      color: #c4b5fd;
+      margin-bottom: 12px;
+      min-height: 1.4em;
+    }
+  
+    #btn-start {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff;
+      border: none;
+      padding: 14px 48px;
+      border-radius: 14px;
+      font-size: 1.25rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+      box-shadow: 0 4px 16px rgba(34, 197, 94, 0.4);
+    }
+  
+    #btn-start:hover:not(:disabled) {
+      transform: scale(1.05);
+      box-shadow: 0 6px 24px rgba(34, 197, 94, 0.6);
+    }
+  
+    /* ปุ่มถูกปิดใช้งานจนกว่าจะเลือกโหมด */
+    #btn-start:disabled {
+      background: #4b5563;
+      opacity: 0.6;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🧙‍♂️ Potion Master</h1>
+    <p class="subtitle">เรียงขวดยาเวทมนตร์ด้วยพลังแห่ง Sorting Algorithm!</p>
+  </header>
+
+  <!-- ===== เมนูเลือกโหมด ===== -->
+  <section id="menu" class="screen">
+    <h2>เลือกบททดสอบ</h2>
+    <div class="mode-cards">
+      <button class="mode-card" data-mode="bubble">
+        <span class="mode-icon">🫧</span>
+        <span class="mode-name">Bubble Apprentice</span>
+        <span class="mode-desc">สลับได้เฉพาะขวดติดกัน<br>จำนวนครั้งจำกัด!</span>
+      </button>
+      <button class="mode-card" data-mode="selection">
+        <span class="mode-icon">🎯</span>
+        <span class="mode-name">Selection Apprentice</span>
+        <span class="mode-desc">เลือกขวดพลังน้อยสุด<br>มาวางทีละตำแหน่ง</span>
+      </button>
+      <button class="mode-card" data-mode="race">
+        <span class="mode-icon">⚔️</span>
+        <span class="mode-name">แข่งกับพ่อมด</span>
+        <span class="mode-desc">เรียงแข่งกับ AI<br>ที่รัน Algorithm ให้ดูสดๆ</span>
+      </button>
+    </div>
+    <div class="difficulty-row">
+      <label>จำนวนขวด:
+        <select id="difficulty">
+          <option value="5">5 (ง่าย)</option>
+          <option value="7" selected>7 (ปานกลาง)</option>
+          <option value="9">9 (ยาก)</option>
+        </select>
+      </label>
+    </div>
+    <div class="start-row">
+      <p id="selected-mode-text" class="selected-mode-text">⬆️ กรุณาเลือกโหมดก่อน</p>
+      <button id="btn-start" disabled>▶️ เริ่มเกม</button>
+    </div>
+  </section>
+
+  <!-- ===== หน้าจอเล่นเกม ===== -->
+  <section id="game" class="screen hidden">
+    <div class="hud">
+      <div id="hud-mode" class="hud-item"></div>
+      <div id="hud-moves" class="hud-item"></div>
+      <div id="hud-lives" class="hud-item"></div>
+      <div id="hud-timer" class="hud-item">⏱ 0.0s</div>
+      <button id="btn-quit">🚪 ออก</button>
+    </div>
+
+    <p id="instruction" class="instruction"></p>
+
+    <!-- ชั้นวางของผู้เล่น -->
+    <div class="shelf-label">🧑‍🎓 ชั้นวางของคุณ</div>
+    <div id="player-shelf" class="shelf"></div>
+
+    <!-- ชั้นวางของ AI (เฉพาะโหมด race) -->
+    <div id="ai-area" class="hidden">
+      <div class="shelf-label">🧙 ชั้นวางของพ่อมด (<span id="ai-algo-name"></span>)</div>
+      <div id="ai-shelf" class="shelf"></div>
+      <p id="ai-status" class="ai-status"></p>
+    </div>
+
+    <div id="message" class="message"></div>
+  </section>
+
+  <!-- ===== หน้าจอจบเกม ===== -->
+  <section id="result" class="screen hidden">
+    <h2 id="result-title"></h2>
+    <p id="result-detail"></p>
+    <p id="result-lesson" class="lesson"></p>
+    <button id="btn-again">🔄 เล่นอีกครั้ง</button>
+  </section>
+
+  <footer>
+    <p>💡 Sorting Algorithm ที่ใช้: Bubble Sort, Selection Sort, Insertion Sort</p>
+  </footer>
+
+    <script>
+      /* 
+       *   Potion Master — เกมเรียงขวดยาเวทมนตร์ด้วย Sorting Algorithm
+       *   ใช้ Algorithm จริง 3 ชนิด:
+       *   1. Bubble Sort    → กำหนดกติกาโหมด Bubble (นับ inversions = จำนวนสลับขั้นต่ำ)
+       *   2. Selection Sort → กำหนดกติกาโหมด Selection (ตรวจว่าผู้เล่นเลือกถูกตาม algorithm)
+       *   3. Insertion Sort / Bubble Sort → AI ในโหมดแข่ง รันทีละ step ให้ผู้เล่นเห็น
+       */
+
+      // สถานะเกม 
+      const state = {
+        mode: null,          // 'bubble' | 'selection' | 'race'
+        potions: [],         // array ของค่าพลัง (ของผู้เล่น)
+        selectedIdx: null,   // ขวดที่ถูกเลือกค้างไว้ (โหมด bubble/race)
+        movesLeft: 0,        // จำนวนสลับที่เหลือ (โหมด bubble)
+        lives: 3,            // พลังชีวิต (โหมด selection)
+        lockedCount: 0,      // จำนวนตำแหน่งที่ล็อกแล้ว (โหมด selection)
+        startTime: 0,
+        timerId: null,
+        aiTimerId: null,
+        aiSteps: [],         // ลำดับขั้นตอนของ AI
+        aiStepIdx: 0,
+        aiPotions: [],
+        gameOver: false,
+      };
+
+      // DOM 
+      const $ = (id) => document.getElementById(id);
+      const screens = { menu: $('menu'), game: $('game'), result: $('result') };
+
+
+      // SORTING ALGORITHMS 
+
+      /**
+       * [BUBBLE SORT — ใช้ใน 2 ที่]
+       * ที่ 1: countBubbleSwaps() นับจำนวนการสลับที่ Bubble Sort ต้องใช้
+       *        ซึ่งเท่ากับจำนวน "inversions" ของ array
+       *        ใช้กำหนด "จำนวนสลับสูงสุด" ที่ผู้เล่นมีในโหมด Bubble
+       *        ผู้เล่นจึงต้องสลับอย่างฉลาดเท่า algorithm จึงจะชนะ!
+       */
+      function countBubbleSwaps(arr) {
+        const a = [...arr];
+        let swaps = 0;
+        const n = a.length;
+        // Bubble Sort มาตรฐาน: วนเปรียบเทียบคู่ติดกัน สลับถ้าผิดลำดับ
+        for (let i = 0; i < n - 1; i++) {
+          for (let j = 0; j < n - 1 - i; j++) {
+            if (a[j] > a[j + 1]) {
+              [a[j], a[j + 1]] = [a[j + 1], a[j]]; // สลับ
+              swaps++;
+            }
+          }
+        }
+        return swaps;
+      }
+
+      /**
+       * [BUBBLE SORT แบบ step-by-step — ใช้เป็น AI ในโหมดแข่ง]
+       * สร้าง "ลำดับขั้นตอน" ของ Bubble Sort ออกมาเป็น array
+       * แต่ละ step บอกว่ากำลัง "เปรียบเทียบ" ตำแหน่งไหน และ "สลับ" หรือไม่
+       * AI จะเล่นทีละ step ให้ผู้เล่นเห็นการทำงานของ algorithm 
+       */
+      function generateBubbleSortSteps(arr) {
+        const a = [...arr];
+        const steps = [];
+        const n = a.length;
+        for (let i = 0; i < n - 1; i++) {
+          for (let j = 0; j < n - 1 - i; j++) {
+            const willSwap = a[j] > a[j + 1];
+            steps.push({ type: 'compare', i: j, j: j + 1, swap: willSwap });
+            if (willSwap) {
+              [a[j], a[j + 1]] = [a[j + 1], a[j]];
+            }
+          }
+        }
+        return steps;
+      }
+
+      /**
+       * [INSERTION SORT แบบ step-by-step — AI อีกตัวในโหมดแข่ง]
+       * Insertion Sort: หยิบขวดทีละใบ แล้ว "เลื่อน" ขวดที่ใหญ่กว่าไปทางขวา
+       * จนเจอตำแหน่งที่ถูกต้อง แล้ววางลง
+       * แสดงให้ผู้เล่นเห็นว่า Insertion เร็วกว่า Bubble เมื่อข้อมูลเกือบเรียงแล้ว
+       */
+      function generateInsertionSortSteps(arr) {
+        const a = [...arr];
+        const steps = [];
+        for (let i = 1; i < a.length; i++) {
+          const key = a[i];
+          let j = i - 1;
+          // เลื่อนตัวที่ใหญ่กว่า key ไปทางขวาทีละช่อง
+          while (j >= 0 && a[j] > key) {
+            steps.push({ type: 'compare', i: j, j: j + 1, swap: true });
+            a[j + 1] = a[j];
+            j--;
+          }
+          if (j + 1 !== i) {
+            a[j + 1] = key;
+          } else {
+            // ไม่ต้องเลื่อน แค่เปรียบเทียบครั้งเดียว
+            steps.push({ type: 'compare', i: Math.max(j, 0), j: i, swap: false });
+          }
+        }
+        return steps;
+      }
+
+      /**
+       * [SELECTION SORT — logic ของโหมด Selection]
+       * findSelectionTarget() หา "ตำแหน่งของค่าน้อยสุด" ในส่วนที่ยังไม่ถูกล็อก
+       * ขั้นตอนหลักของ Selection Sort:
+       *   ในแต่ละรอบ หา min ของส่วนที่เหลือ แล้วย้ายมาไว้หน้าสุด
+       *   ผู้เล่นต้องคลิกขวดใบเดียวกับที่ Selection Sort จะเลือก
+       *   ถ้าคลิกผิด  algorithm = เสียพลังชีวิต
+       */
+      function findSelectionTarget(arr, lockedCount) {
+        let minIdx = lockedCount;
+        // scan หา index ของค่าน้อยสุดในช่วง [lockedCount, n-1]
+        for (let k = lockedCount + 1; k < arr.length; k++) {
+          if (arr[k] < arr[minIdx]) minIdx = k;
+        }
+        return minIdx;
+      }
+
+      /** ตรวจว่า array เรียงจากน้อยไปมากแล้วหรือยัง */
+      function isSorted(arr) {
+        for (let i = 0; i < arr.length - 1; i++) {
+          if (arr[i] > arr[i + 1]) return false;
+        }
+        return true;
+      }
+
+
+      // สร้างข้อมูลขวดยา
+
+      function generatePotions(n) {
+        // สุ่มค่าพลัง ไม่ซ้ำกัน และรับประกันว่ายังไม่เรียง
+        let values;
+        do {
+          const pool = [];
+          while (pool.length < n) {
+            const v = Math.floor(Math.random() * 90) + 10;
+            if (!pool.includes(v)) pool.push(v);
+          }
+          values = pool;
+        } while (isSorted(values));
+        return values;
+      }
+
+
+      // Render
+
+      const POTION_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e'];
+
+      function potionColor(value) {
+        return POTION_COLORS[value % POTION_COLORS.length];
+      }
+
+      function renderShelf(container, arr, opts = {}) {
+        container.innerHTML = '';
+        arr.forEach((value, idx) => {
+          const div = document.createElement('div');
+          div.className = 'potion';
+          div.style.height = (40 + value) + 'px';           // สูงตามค่าพลัง
+          div.style.background = `linear-gradient(${potionColor(value)}, ${potionColor(value)}cc)`;
+          div.textContent = value;
+          div.dataset.idx = idx;
+
+          if (opts.selected === idx) div.classList.add('selected');
+          if (opts.lockedBefore !== undefined && idx < opts.lockedBefore) div.classList.add('locked');
+          if (opts.comparing && (idx === opts.comparing.i || idx === opts.comparing.j)) div.classList.add('comparing');
+          if (opts.clickable) div.addEventListener('click', () => opts.onClick(idx, div));
+
+          container.appendChild(div);
+        });
+      }
+
+      function renderPlayer() {
+        renderShelf($('player-shelf'), state.potions, {
+          selected: state.selectedIdx,
+          lockedBefore: state.mode === 'selection' ? state.lockedCount : undefined,
+          clickable: !state.gameOver,
+          onClick: onPotionClick,
+        });
+      }
+
+
+      // เริ่มเกม
+
+      function startGame(mode) {
+        const n = parseInt($('difficulty').value);
+        state.mode = mode;
+        state.potions = generatePotions(n);
+        state.selectedIdx = null;
+        state.lives = 3;
+        state.lockedCount = 0;
+        state.gameOver = false;
+        state.startTime = Date.now();
+
+        // ตั้งค่าเฉพาะโหมด
+        if (mode === 'bubble') {
+          // [SORTING ใช้ตรงนี้] จำนวนสลับขั้นต่ำ = จำนวนสลับของ Bubble Sort
+          const minSwaps = countBubbleSwaps(state.potions);
+          state.movesLeft = minSwaps + Math.ceil(n / 3); // บวกโบนัสเล็กน้อย
+          $('instruction').textContent = `สลับได้เฉพาะขวดที่ติดกัน! Bubble Sort ใช้ ${minSwaps} ครั้ง — คุณมีสิทธิ์ ${state.movesLeft} ครั้ง`;
+          $('hud-mode').textContent = '🫧 Bubble Mode';
+          $('hud-moves').textContent = `🔄 เหลือ ${state.movesLeft} ครั้ง`;
+          $('hud-lives').textContent = '';
+        }
+        else if (mode === 'selection') {
+          $('instruction').textContent = 'คลิกขวดที่มี "พลังน้อยที่สุด" ในกลุ่มที่ยังไม่ล็อก (ทำตาม Selection Sort!)';
+          $('hud-mode').textContent = '🎯 Selection Mode';
+          $('hud-moves').textContent = '';
+          $('hud-lives').textContent = '❤️'.repeat(state.lives);
+        }
+        else if (mode === 'race') {
+          $('instruction').textContent = 'เรียงให้เสร็จก่อนพ่อมด! สลับขวดคู่ไหนก็ได้ (คลิก 2 ใบเพื่อสลับ)';
+          $('hud-mode').textContent = '⚔️ Race Mode';
+          $('hud-moves').textContent = '';
+          $('hud-lives').textContent = '';
+          setupAI(n);
+        }
+
+        $('ai-area').classList.toggle('hidden', mode !== 'race');
+        $('message').textContent = '';
+        showScreen('game');
+        renderPlayer();
+        startTimer();
+      }
+
+
+      // AI (โหมดแข่ง) — รัน algorithm ทีละ step ให้เห็น
+
+      function setupAI(n) {
+        state.aiPotions = [...state.potions]; // AI ได้โจทย์ชุดเดียวกัน
+
+        // สุ่มเลือก algorithm ให้ AI: Bubble หรือ Insertion
+        const useBubble = Math.random() < 0.5;
+        // [SORTING ใช้ตรงนี้] สร้างลำดับ step จาก algorithm จริง
+        state.aiSteps = useBubble
+          ? generateBubbleSortSteps(state.aiPotions)
+          : generateInsertionSortSteps(state.aiPotions);
+        state.aiStepIdx = 0;
+
+        $('ai-algo-name').textContent = useBubble ? 'Bubble Sort' : 'Insertion Sort';
+        renderShelf($('ai-shelf'), state.aiPotions, {});
+
+        // AI เดิน 1 step ทุก 900ms — ผู้เล่นเห็นการ compare/swap แบบสดๆ
+        const stepDelay = 900;
+        state.aiTimerId = setInterval(() => {
+          if (state.gameOver) return clearInterval(state.aiTimerId);
+
+          if (state.aiStepIdx >= state.aiSteps.length) {
+            clearInterval(state.aiTimerId);
+            endGame(false, 'พ่อมดเรียงเสร็จก่อนคุณ! 🧙');
+            return;
+          }
+
+          const step = state.aiSteps[state.aiStepIdx++];
+          // แสดงการเปรียบเทียบ
+          renderShelf($('ai-shelf'), state.aiPotions, { comparing: step });
+          $('ai-status').textContent = step.swap
+            ? `เปรียบเทียบ ${state.aiPotions[step.i]} กับ ${state.aiPotions[step.j]} → สลับ!`
+            : `เปรียบเทียบ ${state.aiPotions[step.i]} กับ ${state.aiPotions[step.j]} → ไม่สลับ`;
+
+          if (step.swap) {
+            [state.aiPotions[step.i], state.aiPotions[step.j]] =
+              [state.aiPotions[step.j], state.aiPotions[step.i]];
+            setTimeout(() => renderShelf($('ai-shelf'), state.aiPotions, {}), 400);
+          }
+        }, stepDelay);
+      }
+
+
+      // จัดการโหมด
+
+      function onPotionClick(idx, el) {
+        if (state.gameOver) return;
+
+        if (state.mode === 'bubble') handleBubbleClick(idx);
+        else if (state.mode === 'selection') handleSelectionClick(idx, el);
+        else if (state.mode === 'race') handleRaceClick(idx);
+      }
+
+      //  โหมด Bubble: สลับได้เฉพาะคู่ติดกัน 
+      function handleBubbleClick(idx) {
+        if (state.selectedIdx === null) {
+          state.selectedIdx = idx;
+        } else if (state.selectedIdx === idx) {
+          state.selectedIdx = null; // ยกเลิกเลือก
+        } else if (Math.abs(state.selectedIdx - idx) === 1) {
+          // [กติกาจาก Bubble Sort] สลับได้เฉพาะขวดที่อยู่ติดกัน
+          [state.potions[state.selectedIdx], state.potions[idx]] =
+            [state.potions[idx], state.potions[state.selectedIdx]];
+          state.selectedIdx = null;
+          state.movesLeft--;
+          $('hud-moves').textContent = `🔄 เหลือ ${state.movesLeft} ครั้ง`;
+
+          if (isSorted(state.potions)) return endGame(true, 'เรียงสำเร็จ! 🎉');
+          if (state.movesLeft <= 0) return endGame(false, 'จำนวนสลับหมดแล้ว! 💥');
+        } else {
+          $('message').textContent = '⚠️ สลับได้เฉพาะขวดที่ติดกันเท่านั้น (กฎของ Bubble Sort!)';
+          state.selectedIdx = idx;
+        }
+        renderPlayer();
+      }
+
+      // โหมด Selection: ต้องเลือกขวดตามที่ Selection Sort เลือก 
+      function handleSelectionClick(idx, el) {
+        if (idx < state.lockedCount) return; // ล็อกแล้ว คลิกไม่ได้
+
+        // [SORTING ใช้ตรงนี้!] หาคำตอบที่ถูกต้องด้วย logic ของ Selection Sort
+        const correctIdx = findSelectionTarget(state.potions, state.lockedCount);
+
+        if (idx === correctIdx) {
+          // ถูกต้อง! ย้ายขวดมาไว้ตำแหน่ง lockedCount (= swap ของ Selection Sort)
+          [state.potions[state.lockedCount], state.potions[idx]] =
+            [state.potions[idx], state.potions[state.lockedCount]];
+          state.lockedCount++;
+          $('message').textContent = `✅ ถูกต้อง! ล็อกตำแหน่งที่ ${state.lockedCount} แล้ว`;
+
+          if (state.lockedCount >= state.potions.length - 1) {
+            state.lockedCount = state.potions.length;
+            return endGame(true, 'เรียงครบทุกตำแหน่ง! 🎉');
+          }
+        } else {
+          state.lives--;
+          $('hud-lives').textContent = '❤️'.repeat(state.lives) + '🖤'.repeat(3 - state.lives);
+          $('message').textContent = `❌ ผิด! Selection Sort ต้องเลือกค่าน้อยสุดที่เหลือ (คือ ${state.potions[correctIdx]})`;
+          el.classList.add('wrong');
+          if (state.lives <= 0) return endGame(false, 'พลังชีวิตหมด! 💔');
+        }
+        renderPlayer();
+      }
+
+      // โหมด Race: สลับคู่ไหนก็ได้ แข่งกับ AI 
+      function handleRaceClick(idx) {
+        if (state.selectedIdx === null) {
+          state.selectedIdx = idx;
+        } else if (state.selectedIdx === idx) {
+          state.selectedIdx = null;
+        } else {
+          [state.potions[state.selectedIdx], state.potions[idx]] =
+            [state.potions[idx], state.potions[state.selectedIdx]];
+          state.selectedIdx = null;
+          if (isSorted(state.potions)) return endGame(true, 'คุณชนะพ่อมด! ⚡');
+        }
+        renderPlayer();
+      }
+
+
+      // Timer & จบเกม
+
+      function startTimer() {
+        clearInterval(state.timerId);
+        state.timerId = setInterval(() => {
+          const t = ((Date.now() - state.startTime) / 1000).toFixed(1);
+          $('hud-timer').textContent = `⏱ ${t}s`;
+        }, 100);
+      }
+
+      function endGame(won, reason) {
+        state.gameOver = true;
+        clearInterval(state.timerId);
+        clearInterval(state.aiTimerId);
+        renderPlayer();
+
+        const time = ((Date.now() - state.startTime) / 1000).toFixed(1);
+        let score = 0;
+        if (won) {
+          score = Math.max(1000 - Math.floor(time * 10), 100);
+          if (state.mode === 'bubble') score += state.movesLeft * 50;   // โบนัสสลับที่เหลือ
+          if (state.mode === 'selection') score += state.lives * 100;   // โบนัสพลังชีวิต
+        }
+
+        const lessons = {
+          bubble: '📚 บทเรียน: Bubble Sort สลับเฉพาะคู่ติดกัน และจำนวนสลับขั้นต่ำ = จำนวน inversions ของข้อมูล การสลับอย่างฉลาดคือสลับเฉพาะคู่ที่ "ผิดลำดับ" เท่านั้น',
+          selection: '📚 บทเรียน: Selection Sort ทำงานโดย "หาค่าน้อยสุดของส่วนที่เหลือ แล้วย้ายมาหน้าสุด" ทีละรอบ ส่วนที่ล็อกแล้ว (สีเขียว) จะไม่ถูกแตะอีกเลย',
+          race: '📚 บทเรียน: คุณได้เห็น algorithm ทำงานทีละ step! สังเกตว่า Insertion Sort เร็วมากถ้าข้อมูลเกือบเรียงอยู่แล้ว ส่วน Bubble Sort ต้องวนเปรียบเทียบเยอะกว่า',
+        };
+
+        $('result-title').textContent = won ? '🏆 ชนะ!' : '😵 แพ้...';
+        $('result-detail').textContent = `${reason}\nเวลา: ${time}s | คะแนน: ${score}`;
+        $('result-lesson').textContent = lessons[state.mode];
+        showScreen('result');
+      }
+
+      function showScreen(name) {
+        Object.values(screens).forEach(s => s.classList.add('hidden'));
+        screens[name].classList.remove('hidden');
+      }
+
+      // Navigation — เลือกโหมดก่อน แล้วค่อยกดปุ่มเริ่มเกม
+
+      // เก็บโหมดที่ผู้เล่น เลือกไว้
+      let pendingMode = null;
+
+      const MODE_NAMES = {
+        bubble: '🫧 Bubble Apprentice',
+        selection: '🎯 Selection Apprentice',
+        race: '⚔️ แข่งกับพ่อมด',
+      };
+
+      // คลิกการ์ด = เลือกโหมด 
+      document.querySelectorAll('.mode-card').forEach(btn =>
+        btn.addEventListener('click', () => {
+          pendingMode = btn.dataset.mode;
+
+          // ไฮไลต์เฉพาะการ์ดที่เลือก
+          document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+          btn.classList.add('active');
+
+          // อัปเดตข้อความ + เปิดใช้งานปุ่มเริ่ม
+          $('selected-mode-text').textContent = `เลือกแล้ว: ${MODE_NAMES[pendingMode]}`;
+          $('btn-start').disabled = false;
+        })
+      );
+
+      // กดปุ่มเริ่ม = เริ่มเกมด้วยโหมดที่เลือกไว้
+      $('btn-start').addEventListener('click', () => {
+        if (pendingMode) startGame(pendingMode);
+      });
+
+      $('btn-quit').addEventListener('click', () => {
+        state.gameOver = true;
+        clearInterval(state.timerId);
+        clearInterval(state.aiTimerId);
+        showScreen('menu');
+      });
+
+      $('btn-again').addEventListener('click', () => showScreen('menu'));
+    </script>
+</body>
+</html>
